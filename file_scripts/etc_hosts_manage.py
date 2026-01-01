@@ -115,6 +115,12 @@ def remove_host_from_entry(ip_address, hostname, hosts_file="/etc/hosts"):
 
     return modified
 
+# TODO: patch vauge message when the following commands are executed:
+    # ./etc_hosts_manage.py 10.10.10.10 example.com
+    # ./etc_hosts_manage.py 10.10.10.10 --remove-hostname example.com
+    # ./etc_hosts_manage.py 10.10.10.10 --remove
+    # some output: [-] No entries found for 10.10.10.10
+
 def remove_entry_from_hosts_file(ip_address, hosts_file="/etc/hosts"):
     """Remove any lines from /etc/hosts that belong to the provided IPv4 address.
     Returns a list of removed lines (including their trailing newlines), or None if nothing removed.
@@ -129,8 +135,9 @@ def remove_entry_from_hosts_file(ip_address, hosts_file="/etc/hosts"):
     with open(hosts_file, "r") as f:
         for line in f:
             # Separate any inline comment so we only match the actual mapping portion
-            mapping = line.split("#", 1)[0]
-            if re.match(r'^\s*' + re.escape(ip_address) + r'(\s+|$)', mapping):
+            mapping = line.split("#", 1)[0].strip()
+            # Match when the mapping is exactly the IP, or IP followed by whitespace and hostnames
+            if mapping == ip_address or mapping.startswith(ip_address + " ") or mapping.startswith(ip_address + "\t"):
                 removed_lines.append(line)
             else:
                 kept_lines.append(line)
@@ -155,11 +162,18 @@ def get_entries_from_hosts_file(ip_address, hosts_file="/etc/hosts"):
     with open(hosts_file, "r") as f:
         for line in f:
             # Separate any inline comment so we only match the actual mapping portion
-            mapping = line.split("#", 1)[0]
-            if re.match(r'^\s*' + re.escape(ip_address) + r'(\s+|$)', mapping):
+            mapping = line.split("#", 1)[0].strip()
+            # Match when mapping is exactly the IP, or IP followed by whitespace and hostnames
+            if mapping == ip_address or mapping.startswith(ip_address + " ") or mapping.startswith(ip_address + "\t"):
                 matching_lines.append(line)
 
     return matching_lines if matching_lines else None
+
+def request_root():
+    import sys
+    if hasattr(os, 'geteuid') and os.geteuid() != 0:
+        args = ["sudo", sys.executable] + sys.argv + [os.environ]
+        os.execlpe("sudo", *args)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage entries in the /etc/hosts file.")
@@ -173,8 +187,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.hosts_file == "/etc/hosts":
-          if hasattr(os, 'geteuid') and os.geteuid() != 0:
-                raise PermissionError("[-] This script must be run as root.")
+        request_root()
 
     if args.backup:
         backup_path = args.hosts_file + ".bak"
@@ -223,5 +236,3 @@ if __name__ == "__main__":
         
         output = append_to_hosts_file(args.ip_address, args.hostnames, args.hosts_file)
         print(f"{output.strip()}")
-
-# Vibe coding type sh##
