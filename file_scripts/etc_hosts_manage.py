@@ -4,19 +4,25 @@ import os
 import re
 import ipaddress
 
+# May replace all ip regex checks with this function
+def validate_ipv4_address(ip_address):
+    try:
+        ip_obj = ipaddress.ip_address(ip_address)
+    
+    except ValueError:
+        raise ValueError("[-] Invalid IP address format.")
+    
+    if ip_obj.version != 4:
+        raise ValueError("[-] Only IPv4 addresses are supported.")
+
 def append_to_hosts_file(ip_address, hostnames, hosts_file="/etc/hosts"):
     """Append hostnames to the given IP in `hosts_file`.
 
     If the IP already exists in the file, merge hostnames (no duplicates) and preserve
     the first inline comment found. Returns the final line written (including newline).
     """
-    # Validate IPv4 address using stdlib
-    try:
-        ip_obj = ipaddress.ip_address(ip_address)
-    except ValueError:
-        raise ValueError("[-] Invalid IP address format.")
-    if ip_obj.version != 4:
-        raise ValueError("[-] Only IPv4 addresses are supported.")
+
+    validate_ipv4_address(ip_address)
 
     if not hostnames:
         raise ValueError("[-] No hostnames provided to append.")
@@ -199,7 +205,7 @@ if __name__ == "__main__":
     print(f"[*] Using hosts file: {args.hosts_file}")
     if args.remove:
         if args.hostnames:
-            parser.error("the --remove option cannot be used with hostnames")
+            parser.error("the --remove option cannot be used with hostnames, try --remove-host")
 
         removed = remove_entry_from_hosts_file(args.ip_address, args.hosts_file)
         if removed:
@@ -227,6 +233,7 @@ if __name__ == "__main__":
             print(f"[*] Found {len(entry)} line(s) for {args.ip_address}:")
             for l in entry:
                 print(l, end="")
+
         else:
             print(f"[-] No entries found for {args.ip_address}")
     

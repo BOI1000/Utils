@@ -3,6 +3,7 @@
 # PBKDF2 to Hashcat format converter
 # author: Me
 # Usage: pbkdf2-hashcat.sh <hash | hashfile> [options]
+# example hash: pbkdf2:sha256:600000$c2FsdA==$669cfe52482116fda1aa2cbe409b2f56c8e4563752b7a28f6eaab614ee005178
 # hashcat format: sha256:600000:OCpzO4Ehe4pwIulnzs6uRA==:a471b5becdda28104263875dda3b211c
 # hashcat mode: 10900 (PBKDF2-HMAC-SHA256)
 # credits and references:
