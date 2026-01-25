@@ -81,6 +81,8 @@ def append_to_hosts_file(ip_address, hostnames, hosts_file="/etc/hosts"):
 def remove_host_from_entry(ip_address, hostname, hosts_file="/etc/hosts"):
     """Remove a specific hostname from the entry for the provided IPv4 address in /etc/hosts.
     Returns True if the hostname was removed, False if not found.
+
+    If only one hostname is associated with the entry, the entire entry will be deleted # line 115
     """
     
     if not re.match(r"^\d{1,3}(\.\d{1,3}){3}$", ip_address,):
@@ -120,12 +122,6 @@ def remove_host_from_entry(ip_address, hostname, hosts_file="/etc/hosts"):
             f.writelines(updated_lines)
 
     return modified
-
-# TODO: patch vauge message when the following commands are executed:
-    # ./etc_hosts_manage.py 10.10.10.10 example.com
-    # ./etc_hosts_manage.py 10.10.10.10 --remove-hostname example.com
-    # ./etc_hosts_manage.py 10.10.10.10 --remove
-    # some output: [-] No entries found for 10.10.10.10
 
 def remove_entry_from_hosts_file(ip_address, hosts_file="/etc/hosts"):
     """Remove any lines from /etc/hosts that belong to the provided IPv4 address.
@@ -243,3 +239,4 @@ if __name__ == "__main__":
         
         output = append_to_hosts_file(args.ip_address, args.hostnames, args.hosts_file)
         print(f"{output.strip()}")
+
